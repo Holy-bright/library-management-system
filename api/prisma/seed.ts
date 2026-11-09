@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+import bcrypt from "bcrypt";
 import dns from "node:dns";
 dns.setDefaultResultOrder("ipv4first");
 
@@ -73,6 +74,21 @@ async function main() {
       },
     },
   });
+  const librarianPassword = process.env.LIBRARIAN_PASSWORD;
+  if (!librarianPassword) throw new Error("LIBRARIAN_PASSWORD is missing from .env");
+
+  const passwordHash = await bcrypt.hash(librarianPassword, 10);
+  await prisma.user.upsert({
+    where: { email: "librarian@library.test" },
+    update: { passwordHash, role: "LIBRARIAN" },
+    create: {
+      email: "librarian@library.test",
+      name: "Head Librarian",
+      passwordHash,
+      role: "LIBRARIAN",
+    },
+  });
+  console.log("Librarian account ready: librarian@library.test");
 
   const bookCount = await prisma.book.count();
   const genreCount = await prisma.genre.count();

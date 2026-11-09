@@ -4,6 +4,9 @@ import {
 import { BooksService } from "./books.service.js";
 import { CreateBookDto } from "./dto/create-book.dto.js";
 import { UpdateBookDto } from "./dto/update-book.dto.js";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard.js";
+import { RolesGuard } from "../auth/roles.guard.js";
+import { Roles } from "../auth/roles.decorator.js";
 
 @Controller("books")
 export class BooksController {
@@ -23,6 +26,8 @@ export class BooksController {
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.booksService.findOne(id);
   }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("LIBRARIAN")
 
   @Post()
   create(@Body() dto: CreateBookDto) {
