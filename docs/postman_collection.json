@@ -1,0 +1,387 @@
+{
+  "info": {
+    "name": "Library Management System API",
+    "description": "Week 2 endpoints: Auth, Genres, and Books. Run the Auth folder first so the token variables are filled. Set librarianPassword in the collection variables before running (never commit it).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "librarianEmail", "value": "librarian@library.test" },
+    { "key": "librarianPassword", "value": "" },
+    { "key": "patronEmail", "value": "patron@library.test" },
+    { "key": "patronPassword", "value": "patron12345" },
+    { "key": "librarianToken", "value": "" },
+    { "key": "patronToken", "value": "" },
+    { "key": "genreId", "value": "1" },
+    { "key": "bookId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register patron",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patronEmail}}\",\n  \"name\": \"Test Patron\",\n  \"password\": \"{{patronPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "description": "Creates a PATRON account. Expect 201, or 409 if the email already exists."
+          }
+        },
+        {
+          "name": "Register with role field (should be stripped)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sneaky@library.test\",\n  \"name\": \"Sneaky User\",\n  \"password\": \"sneaky12345\",\n  \"role\": \"LIBRARIAN\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "description": "Security test. The response role must be PATRON because the whitelist strips the role field."
+          }
+        },
+        {
+          "name": "Login patron",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) { pm.collectionVariables.set('patronToken', body.accessToken); }",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patronEmail}}\",\n  \"password\": \"{{patronPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Saves the token into the patronToken variable."
+          }
+        },
+        {
+          "name": "Login librarian",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.accessToken) { pm.collectionVariables.set('librarianToken', body.accessToken); }",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{librarianEmail}}\",\n  \"password\": \"{{librarianPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Saves the token into the librarianToken variable."
+          }
+        },
+        {
+          "name": "Login with wrong password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patronEmail}}\",\n  \"password\": \"wrong-password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Expect 401 Invalid email or password."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Genres",
+      "item": [
+        {
+          "name": "List genres",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/genres", "host": ["{{baseUrl}}"], "path": ["genres"] },
+            "description": "Public. Expect 200."
+          }
+        },
+        {
+          "name": "Get one genre",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/genres/{{genreId}}", "host": ["{{baseUrl}}"], "path": ["genres", "{{genreId}}"] },
+            "description": "Public. Expect 200, or 404 for a missing id."
+          }
+        },
+        {
+          "name": "Create genre (librarian)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.id) { pm.collectionVariables.set('genreId', body.id); }",
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{librarianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Poetry\",\n  \"slug\": \"poetry\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/genres", "host": ["{{baseUrl}}"], "path": ["genres"] },
+            "description": "Librarian only. Saves the new id into genreId."
+          }
+        },
+        {
+          "name": "Create genre (patron, should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{patronToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Patron Genre\",\n  \"slug\": \"patron-genre\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/genres", "host": ["{{baseUrl}}"], "path": ["genres"] },
+            "description": "Expect 403 Forbidden."
+          }
+        },
+        {
+          "name": "Update genre (librarian)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{librarianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Poetry and Verse\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/genres/{{genreId}}", "host": ["{{baseUrl}}"], "path": ["genres", "{{genreId}}"] },
+            "description": "Librarian only. Expect 200."
+          }
+        },
+        {
+          "name": "Delete genre (librarian)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{librarianToken}}" }],
+            "url": { "raw": "{{baseUrl}}/genres/{{genreId}}", "host": ["{{baseUrl}}"], "path": ["genres", "{{genreId}}"] },
+            "description": "Librarian only. Expect 204, or 409 if the genre still has books."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "List books (default page)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] },
+            "description": "Public. Returns data plus meta with page, limit, total, totalPages."
+          }
+        },
+        {
+          "name": "Filter books by genre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?genreId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [{ "key": "genreId", "value": "1" }]
+            },
+            "description": "Public. Only books in genre 1."
+          }
+        },
+        {
+          "name": "Search books by title or author",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?search=ngugi",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [{ "key": "search", "value": "ngugi" }]
+            },
+            "description": "Public. Case-insensitive match on title or author."
+          }
+        },
+        {
+          "name": "Paginate books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=2&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                { "key": "page", "value": "2" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Public. Books 6 to 10."
+          }
+        },
+        {
+          "name": "Combined filter, search, and pagination",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?genreId=2&search=a&page=1&limit=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                { "key": "genreId", "value": "2" },
+                { "key": "search", "value": "a" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "3" }
+              ]
+            },
+            "description": "Public. All four query parameters together."
+          }
+        },
+        {
+          "name": "Get one book",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/books/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["books", "{{bookId}}"] },
+            "description": "Public. Expect 200, or 404 for a missing id."
+          }
+        },
+        {
+          "name": "Create book (no token, should fail)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"No Token Book\",\n  \"author\": \"Tester\",\n  \"isbn\": \"9780000000098\",\n  \"totalCopies\": 1,\n  \"genreId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] },
+            "description": "Expect 401 Unauthorized."
+          }
+        },
+        {
+          "name": "Create book (patron, should fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{patronToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Patron Book\",\n  \"author\": \"Tester\",\n  \"isbn\": \"9780000000097\",\n  \"totalCopies\": 1,\n  \"genreId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] },
+            "description": "Expect 403 Forbidden."
+          }
+        },
+        {
+          "name": "Create book (invalid body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{librarianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"author\": \"Tester\",\n  \"isbn\": \"123\",\n  \"totalCopies\": 0,\n  \"genreId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] },
+            "description": "Expect 400 with a list of validation errors."
+          }
+        },
+        {
+          "name": "Create book (librarian)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.id) { pm.collectionVariables.set('bookId', body.id); }",
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{librarianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Test Book\",\n  \"author\": \"Tester\",\n  \"isbn\": \"9780000000096\",\n  \"totalCopies\": 2,\n  \"genreId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books", "host": ["{{baseUrl}}"], "path": ["books"] },
+            "description": "Librarian only. Saves the new id into bookId. Change the isbn before rerunning to avoid a 409."
+          }
+        },
+        {
+          "name": "Update book (librarian)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{librarianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalCopies\": 3\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/books/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["books", "{{bookId}}"] },
+            "description": "Librarian only. availableCopies adjusts with totalCopies."
+          }
+        },
+        {
+          "name": "Delete book (librarian)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{librarianToken}}" }],
+            "url": { "raw": "{{baseUrl}}/books/{{bookId}}", "host": ["{{baseUrl}}"], "path": ["books", "{{bookId}}"] },
+            "description": "Librarian only. Expect 204."
+          }
+        }
+      ]
+    }
+  ]
+}
