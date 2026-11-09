@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query, UseGuards,
 } from "@nestjs/common";
 import { BooksService } from "./books.service.js";
 import { CreateBookDto } from "./dto/create-book.dto.js";
@@ -26,19 +26,23 @@ export class BooksController {
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.booksService.findOne(id);
   }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("LIBRARIAN")
-
   @Post()
   create(@Body() dto: CreateBookDto) {
     return this.booksService.create(dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("LIBRARIAN")
   @Patch(":id")
   update(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateBookDto) {
     return this.booksService.update(id, dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("LIBRARIAN")
   @Delete(":id")
   @HttpCode(204)
   remove(@Param("id", ParseIntPipe) id: number) {
