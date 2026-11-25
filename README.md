@@ -47,7 +47,7 @@ Each graded file, with a link and what it contains.
 | File | Contents |
 |---|---|
 | [client/src/main.jsx](client/src/main.jsx) | Wraps App in BrowserRouter |
-| [client/src/App.jsx](client/src/App.jsx) | Routes for / and /books/:id, plus a not-found route |
+| [client/src/App.jsx](client/src/App.jsx) | Routes for / and /books/:id, plus later weeks' routes and a not-found route |
 | [client/src/pages/HomePage.jsx](client/src/pages/HomePage.jsx) | Holds the shared search, genre, and sort state. Renders SearchBar, GenreFilter, SortControl, and BookGrid |
 | [client/src/components/BookGrid.jsx](client/src/components/BookGrid.jsx) | Calls GET /books with genreId and search params. Handles loading (skeleton cards), error (with retry), and empty states |
 | [client/src/components/BookCard.jsx](client/src/components/BookCard.jsx) | Renders one book. Mapped in BookGrid with key={book.id} |
@@ -57,6 +57,21 @@ Each graded file, with a link and what it contains.
 | [client/src/pages/BookDetail.jsx](client/src/pages/BookDetail.jsx) | Reads id from useParams() and calls GET /books/:id |
 | [client/src/api.js](client/src/api.js) | Shared axios instance using VITE_API_URL |
 | [client/.env](client/.env) | VITE_API_URL=http://localhost:3000 |
+
+### Week 4: Reading List, Auth Flow and Space Booking Form
+
+| File | Contents |
+|---|---|
+| [client/src/context/ReadingListContext.jsx](client/src/context/ReadingListContext.jsx) | useReducer handling ADD_BOOK, REMOVE_BOOK, and CLEAR_LIST. Restored from localStorage on start and saved on every change |
+| [client/src/App.jsx](client/src/App.jsx) | Wraps every route in AuthProvider and ReadingListProvider. Protects /book-space with ProtectedRoute |
+| [client/src/pages/LoginPage.jsx](client/src/pages/LoginPage.jsx) | Controlled form posting to /auth/login. Stores the returned JWT in localStorage |
+| [client/src/pages/RegisterPage.jsx](client/src/pages/RegisterPage.jsx) | Controlled form posting to /auth/register, then logs in and stores the JWT |
+| [client/src/components/ProtectedRoute.jsx](client/src/components/ProtectedRoute.jsx) | Redirects to /login when no valid token is present. Otherwise renders its children |
+| [client/src/pages/SpaceBookingPage.jsx](client/src/pages/SpaceBookingPage.jsx) | Controlled form with a space dropdown and date, startTime, and endTime inputs |
+| [client/src/components/Navbar.jsx](client/src/components/Navbar.jsx) | Shows the reading list count from ReadingListContext, plus login state |
+| [client/src/context/AuthContext.jsx](client/src/context/AuthContext.jsx) | Holds the token and user, saves them to localStorage, and treats expired tokens as logged out |
+| [client/src/components/ReadingListButton.jsx](client/src/components/ReadingListButton.jsx) | Add or remove button used on book cards and the detail page |
+| [client/src/pages/ReadingListPage.jsx](client/src/pages/ReadingListPage.jsx) | Lists saved books with remove and clear actions |
 
 ## Schema Decisions
 
@@ -82,6 +97,9 @@ In a document database such as MongoDB, I could store a book's genre and reviews
 - BookGrid requests `limit=50`, the API's maximum, so the whole catalog fits on one page.
 - Each fetch uses an AbortController. When the search or genre changes quickly, the older request is cancelled, so a slow old response can never replace newer results.
 - `client/.env` is committed on purpose. It holds only the public API address. Any `VITE_` value is built into the JavaScript sent to the browser, so secrets never go in this file.
+- The reading list saves only id, title, author, and genre name. It does not save availableCopies, because that number changes as people borrow books.
+- The JWT is stored in localStorage, and an axios interceptor attaches it to every request. localStorage is readable by any script on the page, so a production app would consider httpOnly cookies instead. ProtectedRoute only improves the experience. The API's JwtAuthGuard is the real security check.
+- The space booking form validates required fields, past dates, and end time after start time. It does not call the API yet. The booking endpoint with conflict checks arrives in Week 5.
 
 ## Running Locally
 

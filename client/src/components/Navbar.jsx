@@ -1,5 +1,6 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useReadingList } from "../context/ReadingListContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const linkClass = ({ isActive }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${
@@ -8,6 +9,13 @@ const linkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const { readingList } = useReadingList();
+  const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -29,6 +37,32 @@ export default function Navbar() {
             {readingList.length}
           </span>
         </NavLink>
+
+        <NavLink to="/book-space" className={linkClass}>
+          Book a space
+        </NavLink>
+
+        {isLoggedIn ? (
+          <>
+            <span className="px-2 text-sm text-slate-600">Hi, {user?.name}</span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className={linkClass}>
+              Log in
+            </NavLink>
+            <NavLink to="/register" className={linkClass}>
+              Register
+            </NavLink>
+          </>
+        )}
       </nav>
     </header>
   );
