@@ -1,6 +1,9 @@
 import { Link, Route, Routes } from "react-router-dom";
+import { ReadingListProvider } from "./context/ReadingListContext.jsx";
+import Navbar from "./components/Navbar.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import BookDetail from "./pages/BookDetail.jsx";
+import ReadingListPage from "./pages/ReadingListPage.jsx";
 
 function NotFound() {
   return (
@@ -15,22 +18,19 @@ function NotFound() {
 
 export default function App() {
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-4">
-          <Link to="/" className="text-xl font-bold text-slate-800">
-            Library Catalog
-          </Link>
-        </div>
-      </header>
+    <ReadingListProvider>
+      <div className="min-h-screen">
+        <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/books/:id" element={<BookDetail />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-    </div>
+        <main className="mx-auto max-w-6xl px-4 py-6">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/books/:id" element={<BookDetail />} />
+            <Route path="/reading-list" element={<ReadingListPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    </ReadingListProvider>
   );
 }

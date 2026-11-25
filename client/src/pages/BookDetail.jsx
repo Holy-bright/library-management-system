@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api.js";
+import ReadingListButton from "../components/ReadingListButton.jsx";
 
 export default function BookDetail() {
   const { id } = useParams();
@@ -81,6 +82,10 @@ export default function BookDetail() {
               </dd>
             </div>
           </dl>
+
+          <div className="mt-6 max-w-xs">
+            <ReadingListButton book={book} />
+          </div>
         </article>
       )}
     </section>
